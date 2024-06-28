@@ -7,7 +7,7 @@ import { useCart } from "../store/page";
 const LandingPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchProduct, setSearchProduct] = useState("");
   const [loading, setLoading] = useState(true);
   const { addToCart, removeFromCart, cartCount } = useCart();
 
@@ -34,11 +34,11 @@ const LandingPage = () => {
   useEffect(() => {
     const results = products.filter(
       (product) =>
-        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+        product.title.toLowerCase().includes(searchProduct.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchProduct.toLowerCase())
     );
     setFilteredProducts(results);
-  }, [searchTerm, products]);
+  }, [searchProduct, products]);
 
   if (loading) {
     return (
@@ -61,8 +61,8 @@ const LandingPage = () => {
           <Form.Control
             type="text"
             placeholder="Search by product name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchProduct}
+            onChange={(e) => setSearchProduct(e.target.value)}
           />
         </Form.Group>
       </Form>
