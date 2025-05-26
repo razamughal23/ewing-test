@@ -1,44 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Button, Form, Spinner } from "react-bootstrap";
-import { Product } from "../types/index";
-import { useCart } from "../store/page";
+import { Button, Spinner } from "react-bootstrap";
+import { useFetchFakeApiData } from "../api/page";
+import { useCartStore } from "../store";
 
 const LandingPage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchProduct, setSearchProduct] = useState("");
-  const [loading, setLoading] = useState(true);
-  const { addToCart, removeFromCart, cartCount } = useCart();
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("https://fakestoreapi.com/products");
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data: Product[] = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    const results = products.filter(
-      (product) =>
-        product.title.toLowerCase().includes(searchProduct.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchProduct.toLowerCase())
-    );
-    setFilteredProducts(results);
-  }, [searchProduct, products]);
+  const { cart, addToCart, updateQuantity, cartCount } =
+    useCartStore();
+  const { data, loading } = useFetchFakeApiData();
+  console.log("cartCount", cart);
 
   if (loading) {
     return (
@@ -55,30 +24,22 @@ const LandingPage = () => {
 
   return (
     <div className="container">
-      <Form>
-        <Form.Group controlId="search">
-          <Form.Label>Search Products</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Search by product name"
-            value={searchProduct}
-            onChange={(e) => setSearchProduct(e.target.value)}
-          />
-        </Form.Group>
-      </Form>
       <div className="d-flex justify-content-end mt-2 mb-2">
         <div className="d-flex align-items-center">
-          <span className="me-3">Cart Items: {cartCount}</span>
+          <span>Cart Items: {cart?.length}</span>
+          <a href="/cart">
+            <span>Open Cart Page</span>
+          </a>
         </div>
       </div>
       <div className="row">
-        {filteredProducts.map((product) => (
-          <div className="col-md-4 mb-4" key={product.id}>
+        {data?.map((item: any) => (
+          <div className="col-md-6 col-lg-4 mb-4" key={item.id}>
             <div className="card h-100 d-flex justify-content-center align-items-center">
               <img
-                src={product.image}
+                src={item.image}
                 className="card-img-top"
-                alt={product.title}
+                alt={item.title}
                 style={{
                   objectFit: "contain",
                   height: "200px",
@@ -86,34 +47,37 @@ const LandingPage = () => {
                 }}
               />
               <div className="card-body">
-                <h5 className="card-title">{product.title}</h5>
-                <p className="card-text m-0">{product.category}</p>
+                <h5 className="card-title">{item.title}</h5>
+                <p className="card-text m-0">{item.category}</p>
                 <p className="card-text">
-                  {product.description.length > 40
-                    ? `${product.description.substring(0, 40)}...`
-                    : product.description}
+                  {item.description.length > 40
+                    ? `${item.description.substring(0, 40)}...`
+                    : item.description}
                 </p>
-                <p className="card-text">Price: ${product.price}</p>
+                <p className="card-text">Price: ${item.price}</p>
                 <div className="mb-1">
-                  <a
-                    href={`/products/${product.id}`}
-                    className="btn btn-primary"
-                  >
+                  <a href={`/products/${item.id}`} className="btn btn-primary">
                     View Details
                   </a>
                 </div>
                 <Button
-                  variant="primary"
-                  onClick={() => addToCart(product)}
-                  className="me-2"
-                >
-                  Add to Cart
-                </Button>
-                <Button
                   variant="danger"
-                  onClick={() => removeFromCart(product.id)}
+                  onClick={() => {
+                    const cartItem = cart.find((ci) => ci.id === item.id);
+                    if (cartItem) {
+                      updateQuantity(item.id, cartItem.quantity - 1);
+                    }
+                  }}
                 >
-                  Remove from Cart
+                  -
+                </Button>
+
+                <span className="mx-2">
+                  {cart.find((ci) => ci.id === item.id)?.quantity || 0}
+                </span>
+
+                <Button variant="primary" onClick={() => addToCart(item)}>
+                  +
                 </Button>
               </div>
             </div>
